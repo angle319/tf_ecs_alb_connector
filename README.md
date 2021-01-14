@@ -1,2 +1,2 @@
-# Module for ecs connect to alb  
+# A Terraform Module for AWS ECS connect to alb 
 For easier write ecs task and alb rules
