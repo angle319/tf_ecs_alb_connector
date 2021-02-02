@@ -71,9 +71,9 @@ variable "deregistration_delay" {
 }
 
 variable "is_log"{
-  type =bool
+  type = bool
   description ="container auto log"
-  default = false
+  default = true
 }
 variable "desired_count" {
   type = number
