@@ -40,7 +40,7 @@ resource "aws_cloudwatch_log_group" "this" {
         }
       }
     })])[count.index].logConfiguration.options["awslogs-group"]
-  retention_in_days = "3"
+  retention_in_days = var.retention_in_days
   tags = {
     Name        = "${local.alias}-tg"
     author      = "angle"

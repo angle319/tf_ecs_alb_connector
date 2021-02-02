@@ -80,3 +80,9 @@ variable "desired_count" {
   description = "task number"
   default = 1
 }
+
+variable "retention_in_days" {
+  type = number
+  description = "task number"
+  default = 14
+}
