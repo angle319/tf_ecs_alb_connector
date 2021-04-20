@@ -72,7 +72,7 @@ resource "aws_alb_target_group" "this" {
   vpc_id   = var.vpc_id
   deregistration_delay = local.deregistration_delay
   dynamic "health_check" {
-    for_each = local.health_check.protocol == "TCP" ? [] : list(local.health_check)
+    for_each = local.health_check.protocol == "TCP" ? [] : tolist(local.health_check)
 
     content {
       port                = "traffic-port"
