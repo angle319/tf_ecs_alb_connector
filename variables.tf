@@ -1,27 +1,27 @@
-variable cs_id {
+variable "cs_id" {
   type = string
 }
 
-variable vpc_id {
+variable "vpc_id" {
   type = string
 }
 
-variable env {
+variable "env" {
   type = string
 }
 
-variable listener_arn {
+variable "listener_arn" {
   type    = string
   default = ""
 }
 
-variable name {
+variable "name" {
   type = string
 }
 
 
-variable health_check {
-  type        = map
+variable "health_check" {
+  type        = map(any)
   description = "Health checks for Target Group"
   default = {
     path                = "/"
@@ -32,33 +32,33 @@ variable health_check {
     protocol            = "HTTP"
   }
 }
-variable https_listener_rules {
+variable "https_listener_rules" {
   description = "A list of maps describing the Listener Rules for this ALB. Required key/values: actions, conditions. Optional key/values: priority, https_listener_index (default to https_listeners[count.index])"
   type        = any
   default     = []
 }
 
-variable task_def {
+variable "task_def" {
   type = list(any)
 }
 
-variable priority {
+variable "priority" {
   type    = number
   default = 1
 }
 
 
-variable is_default_tg {
+variable "is_default_tg" {
   type    = bool
   default = false
 }
 
-variable mapping_port {
+variable "mapping_port" {
   type    = number
   default = 0
 }
 
-variable service_registries {
+variable "service_registries" {
   description = "service discovery"
   type        = map(string)
   default     = {}
@@ -70,19 +70,47 @@ variable "deregistration_delay" {
   default     = 30
 }
 
-variable "is_log"{
-  type = bool
-  description ="container auto log"
-  default = true
+variable "is_log" {
+  type        = bool
+  description = "container auto log"
+  default     = true
 }
 variable "desired_count" {
-  type = number
+  type        = number
   description = "task number"
-  default = 1
+  default     = 1
 }
 
 variable "retention_in_days" {
-  type = number
+  type        = number
   description = "task number"
-  default = 14
+  default     = 14
 }
+
+variable "deployment_maximum_percent" {
+  type        = number
+  description = "ecs maximun healthy percent"
+  default     = 200
+}
+
+variable "deployment_minimum_healthy_percent" {
+  type        = number
+  description = "ecs minimum healthy percent"
+  default     = 100
+}
+
+variable "placement_constraints" {
+  description = "ecs container constraints"
+  type        = map(string)
+  default     = {}
+}
+
+variable "ordered_placement_strategy" {
+  description = "ecs container order strategy"
+  type        = map(string)
+  default = {
+    type  = "spread"
+    field = "instanceId"
+  }
+}
+

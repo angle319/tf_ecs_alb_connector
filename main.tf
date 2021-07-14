@@ -14,32 +14,32 @@ locals {
   container_definitions = jsonencode(var.task_def)
   priority              = var.priority
   deregistration_delay  = var.deregistration_delay
-  is_log = var.is_log
-  log_taskdefs = [for x in var.task_def: x if lookup(x,"logConfiguration",null) != null]
+  is_log                = var.is_log
+  log_taskdefs          = [for x in var.task_def : x if lookup(x, "logConfiguration", null) != null]
 }
 
 data "aws_region" "current" {}
 
 resource "aws_cloudwatch_log_group" "this" {
   #count = length(var.task_def)
-  count = length( local.is_log==false ? local.log_taskdefs :  [for x in var.task_def: merge(x,{logConfiguration = {
-      logDriver = "awslogs"
-      options = {
-        "awslogs-group"         = "/ecs/${var.name}-${var.env}",
-        "awslogs-region"        = data.aws_region.current.name,
-        "awslogs-stream-prefix" = "ecs"
-        }
-      }
-    })])
-  name  =  (local.is_log==false ? local.log_taskdefs :  [for x in var.task_def: merge(x,{logConfiguration = {
-      logDriver = "awslogs"
-      options = {
-        "awslogs-group"         = "/ecs/${var.name}-${var.env}",
-        "awslogs-region"        = data.aws_region.current.name,
-        "awslogs-stream-prefix" = "ecs"
-        }
-      }
-    })])[count.index].logConfiguration.options["awslogs-group"]
+  count = length(local.is_log == false ? local.log_taskdefs : [for x in var.task_def : merge(x, { logConfiguration = {
+    logDriver = "awslogs"
+    options = {
+      "awslogs-group"         = "/ecs/${var.name}-${var.env}",
+      "awslogs-region"        = data.aws_region.current.name,
+      "awslogs-stream-prefix" = "ecs"
+    }
+    }
+  })])
+  name = (local.is_log == false ? local.log_taskdefs : [for x in var.task_def : merge(x, { logConfiguration = {
+    logDriver = "awslogs"
+    options = {
+      "awslogs-group"         = "/ecs/${var.name}-${var.env}",
+      "awslogs-region"        = data.aws_region.current.name,
+      "awslogs-stream-prefix" = "ecs"
+    }
+    }
+  })])[count.index].logConfiguration.options["awslogs-group"]
   retention_in_days = var.retention_in_days
   tags = {
     Name        = "${local.alias}-tg"
@@ -51,25 +51,25 @@ resource "aws_cloudwatch_log_group" "this" {
 }
 
 resource "aws_ecs_task_definition" "this" {
-  family                = "${local.alias}-task"
-  container_definitions = local.is_log==false ? local.container_definitions :  jsonencode([for x in var.task_def: merge(x,{logConfiguration = {
-      logDriver = "awslogs"
-      options = {
-        "awslogs-group"         = "/ecs/${var.name}-${var.env}",
-        "awslogs-region"        = data.aws_region.current.name,
-        "awslogs-stream-prefix" = "ecs"
-        }
-      }
-    })])
+  family = "${local.alias}-task"
+  container_definitions = local.is_log == false ? local.container_definitions : jsonencode([for x in var.task_def : merge(x, { logConfiguration = {
+    logDriver = "awslogs"
+    options = {
+      "awslogs-group"         = "/ecs/${var.name}-${var.env}",
+      "awslogs-region"        = data.aws_region.current.name,
+      "awslogs-stream-prefix" = "ecs"
+    }
+    }
+  })])
 }
 
 
 resource "aws_alb_target_group" "this" {
-  count    = length(var.https_listener_rules)
-  name     = "${local.alias}-tg"
-  port     = 80
-  protocol = "HTTP"
-  vpc_id   = var.vpc_id
+  count                = length(var.https_listener_rules)
+  name                 = "${local.alias}-tg"
+  port                 = 80
+  protocol             = "HTTP"
+  vpc_id               = var.vpc_id
   deregistration_delay = local.deregistration_delay
   dynamic "health_check" {
     for_each = local.health_check.protocol == "TCP" ? [] : tolist([local.health_check])
@@ -218,20 +218,23 @@ resource "aws_ecs_service" "this" {
   #  task_definition                    = "${aws_ecs_task_definition.this.family}:${max("${aws_ecs_task_definition.this.revision}", "${data.aws_ecs_task_definition.this.revision}")}"
   task_definition                    = "${aws_ecs_task_definition.this.family}:${max("${aws_ecs_task_definition.this.revision}", "${data.aws_ecs_task_definition.this.revision}")}"
   desired_count                      = local.desired_count
-  deployment_maximum_percent         = 200
-  deployment_minimum_healthy_percent = 100
-  health_check_grace_period_seconds  = length(keys(var.service_registries)) == 0 ? (length(var.https_listener_rules)==0 ? null: 200) : 0
+  deployment_maximum_percent         = var.deployment_maximum_percent
+  deployment_minimum_healthy_percent = var.deployment_minimum_healthy_percent
+  health_check_grace_period_seconds  = length(keys(var.service_registries)) == 0 ? (length(var.https_listener_rules) == 0 ? null : 200) : 0
 
-  ordered_placement_strategy {
-    type  = "spread"
-    field = "instanceId"
+  dynamic "ordered_placement_strategy" {
+    for_each = length(keys(var.ordered_placement_strategy)) == 0 ? [] : [var.ordered_placement_strategy]
+    content {
+      type  = ordered_placement_strategy.value["type"]
+      field = ordered_placement_strategy.value["field"]
+    }
   }
 
   dynamic "load_balancer" {
     for_each = var.mapping_port == 0 ? [] : [{}]
     content {
       target_group_arn = aws_alb_target_group.this[0].arn
-      container_name   = "${local.name}"
+      container_name   = local.name
       container_port   = var.mapping_port
     }
   }
@@ -242,12 +245,19 @@ resource "aws_ecs_service" "this" {
   #   type       = "memberOf"
   #   expression = "attribute:ecs.availability-zone in [us-west-2a, us-west-2b]"
   # }
+  dynamic "placement_constraints" {
+    for_each = length(keys(var.placement_constraints)) == 0 ? [] : [var.placement_constraints]
+    content {
+      type       = placement_constraints.value["type"]
+      expression = placement_constraints.value["expression"]
+    }
+  }
   dynamic "service_registries" {
     for_each = length(keys(var.service_registries)) == 0 ? [] : [var.service_registries]
     content {
-      registry_arn = service_registries.value["registry_arn"]
+      registry_arn   = service_registries.value["registry_arn"]
       container_port = service_registries.value["container_port"]
-      container_name =  service_registries.value["container_name"]
+      container_name = service_registries.value["container_name"]
     }
   }
 }

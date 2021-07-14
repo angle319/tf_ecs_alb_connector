@@ -1,2 +1,3 @@
-# A Terraform Module for AWS ECS connect to alb 
-For easier write ecs task and alb rules
+# A Terraform Module for AWS ECS connect to alb and cloudwatch 
+More easier setting ecs task to connect alb-rules and cloudwatch 
+

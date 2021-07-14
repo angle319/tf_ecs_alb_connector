@@ -1,20 +1,20 @@
-module some-example {
-  source       = "../"
-  vpc_id       = var.vpc_id
-  cs_id        = var.cs_id
-  env          = var.env
-  is_log       = true
-  name         = "some-example"
+module "some-example" {
+  source = "../"
+  vpc_id = var.vpc_id
+  cs_id  = var.cs_id
+  env    = var.env
+  is_log = true
+  name   = "some-example"
   task_def = [{
     "name"              = "some-example"
     "image"             = "docker_path:tag"
     "cpu"               = 200
     "memoryReservation" = 400
-    "command": [
+    "command" : [
       "node", "index.js"
     ]
     "environment" = [for k, v in {
-      NODE_ENV          = "dev"
+      NODE_ENV = "dev"
     } : { "name" : k, "value" : v }]
   }]
   https_listener_rules = [
