@@ -114,3 +114,9 @@ variable "ordered_placement_strategy" {
   }
 }
 
+variable "load_balancing_algorithm_type" {
+  description = "alb algorithm"
+  type = string
+  default = "round_robin"
+}
+
