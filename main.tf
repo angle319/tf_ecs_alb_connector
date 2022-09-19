@@ -16,6 +16,7 @@ locals {
   deregistration_delay  = var.deregistration_delay
   is_log                = var.is_log
   log_taskdefs          = [for x in var.task_def : x if lookup(x, "logConfiguration", null) != null]
+  load_balancing_algorithm_type = var.load_balancing_algorithm_type
 }
 
 data "aws_region" "current" {}
@@ -71,6 +72,7 @@ resource "aws_alb_target_group" "this" {
   protocol             = "HTTP"
   vpc_id               = var.vpc_id
   deregistration_delay = local.deregistration_delay
+  load_balancing_algorithm_type = local.load_balancing_algorithm_type
   dynamic "health_check" {
     for_each = local.health_check.protocol == "TCP" ? [] : tolist([local.health_check])
 
