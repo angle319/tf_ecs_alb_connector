@@ -223,6 +223,7 @@ resource "aws_ecs_service" "this" {
   force_new_deployment               = true
   deployment_maximum_percent         = var.deployment_maximum_percent
   deployment_minimum_healthy_percent = var.deployment_minimum_healthy_percent
+  scheduling_strategy                = var.scheduling_strategy
   health_check_grace_period_seconds  = length(keys(var.service_registries)) == 0 ? (length(var.https_listener_rules) == 0 ? null : 200) : 0
 
   dynamic "ordered_placement_strategy" {

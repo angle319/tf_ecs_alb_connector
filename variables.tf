@@ -120,3 +120,9 @@ variable "load_balancing_algorithm_type" {
   default = "round_robin"
 }
 
+variable "scheduling_strategy" {
+  description = "ecs scheduling strategy. The valid values are REPLICA and DAEMON"
+  type = string
+  default = "REPLICA"
+}
+
