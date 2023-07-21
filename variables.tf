@@ -72,7 +72,7 @@ variable "deregistration_delay" {
 
 variable "is_log" {
   type        = bool
-  description = "container auto log"
+  description = "container auto aws driver with log"
   default     = true
 }
 variable "desired_count" {
@@ -124,5 +124,9 @@ variable "scheduling_strategy" {
   description = "ecs scheduling strategy. The valid values are REPLICA and DAEMON"
   type = string
   default = "REPLICA"
+}
+
+variable "auto_generate_cw_group_key" {
+  default = "cloudwatchGroupName"
 }
 

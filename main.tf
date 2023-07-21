@@ -17,13 +17,14 @@ locals {
   is_log                = var.is_log
   log_taskdefs          = [for x in var.task_def : x if lookup(x, "logConfiguration", null) != null]
   load_balancing_algorithm_type = var.load_balancing_algorithm_type
+  list_task_wtih_auto_cwlg = [for x in [for x in var.task_def :  {for k, v in  lookup(x, "logConfiguration", null): k => v if k == var.auto_generate_cw_group_key }] : x if x != {}]
 }
 
 data "aws_region" "current" {}
 
+// is_log flag to generate aws log driver
 resource "aws_cloudwatch_log_group" "this" {
-  #count = length(var.task_def)
-  count = length(local.is_log == false ? local.log_taskdefs : [for x in var.task_def : merge(x, { logConfiguration = {
+  count = length(local.is_log == false ? [] : [for x in var.task_def : merge(x, { logConfiguration = {
     logDriver = "awslogs"
     options = {
       "awslogs-group"         = "/ecs/${var.name}-${var.env}",
@@ -32,7 +33,7 @@ resource "aws_cloudwatch_log_group" "this" {
     }
     }
   })])
-  name = (local.is_log == false ? local.log_taskdefs : [for x in var.task_def : merge(x, { logConfiguration = {
+  name = (local.is_log == false ? [] : [for x in var.task_def : merge(x, { logConfiguration = {
     logDriver = "awslogs"
     options = {
       "awslogs-group"         = "/ecs/${var.name}-${var.env}",
@@ -51,9 +52,24 @@ resource "aws_cloudwatch_log_group" "this" {
   }
 }
 
+resource "aws_cloudwatch_log_group" "customize_naming" {
+  count = length( local.list_task_wtih_auto_cwlg)
+  name = (local.list_task_wtih_auto_cwlg)[count.index][var.auto_generate_cw_group_key]
+  retention_in_days = var.retention_in_days
+  tags = {
+    Name        = "${local.alias}-tg"
+    author      = "angle"
+    provision   = "terraform"
+    purpose     = "ecs-deployment"
+    environment = local.environment
+  }
+}
+
 resource "aws_ecs_task_definition" "this" {
   family = "${local.alias}-task"
-  container_definitions = local.is_log == false ? local.container_definitions : jsonencode([for x in var.task_def : merge(x, { logConfiguration = {
+  container_definitions = local.is_log == false ? jsonencode(
+    [for x in var.task_def : merge(x, {logConfiguration = {for k, v in  lookup(x, "logConfiguration", null): k => v if k != var.auto_generate_cw_group_key}}) ]
+  ) : jsonencode([for x in var.task_def : merge(x, { logConfiguration = {
     logDriver = "awslogs"
     options = {
       "awslogs-group"         = "/ecs/${var.name}-${var.env}",
