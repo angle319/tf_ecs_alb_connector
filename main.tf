@@ -11,13 +11,13 @@ locals {
     timeout             = "5"
     protocol            = "HTTP"
   }, var.health_check)
-  container_definitions = jsonencode(var.task_def)
-  priority              = var.priority
-  deregistration_delay  = var.deregistration_delay
-  is_log                = var.is_log
-  log_taskdefs          = [for x in var.task_def : x if lookup(x, "logConfiguration", null) != null]
+  container_definitions         = jsonencode(var.task_def)
+  priority                      = var.priority
+  deregistration_delay          = var.deregistration_delay
+  is_log                        = var.is_log
+  log_taskdefs                  = [for x in var.task_def : x if lookup(x, "logConfiguration", null) != null]
   load_balancing_algorithm_type = var.load_balancing_algorithm_type
-  list_task_wtih_auto_cwlg = [for x in [for x in var.task_def :  {for k, v in  lookup(x, "logConfiguration", null): k => v if k == var.auto_generate_cw_group_key }] : x if x != {}]
+  list_task_wtih_auto_cwlg      = [for x in [for x in var.task_def : { for k, v in lookup(x, "logConfiguration", null) : k => v if k == var.auto_generate_cw_group_key }] : x if x != {}]
 }
 
 data "aws_region" "current" {}
@@ -53,8 +53,8 @@ resource "aws_cloudwatch_log_group" "this" {
 }
 
 resource "aws_cloudwatch_log_group" "customize_naming" {
-  count = length( local.list_task_wtih_auto_cwlg)
-  name = (local.list_task_wtih_auto_cwlg)[count.index][var.auto_generate_cw_group_key]
+  count             = length(local.list_task_wtih_auto_cwlg)
+  name              = (local.list_task_wtih_auto_cwlg)[count.index][var.auto_generate_cw_group_key]
   retention_in_days = var.retention_in_days
   tags = {
     Name        = "${local.alias}-tg"
@@ -68,26 +68,26 @@ resource "aws_cloudwatch_log_group" "customize_naming" {
 resource "aws_ecs_task_definition" "this" {
   family = "${local.alias}-task"
   container_definitions = local.is_log == false ? jsonencode(
-    [for x in var.task_def : merge(x, {logConfiguration = {for k, v in  lookup(x, "logConfiguration", null): k => v if k != var.auto_generate_cw_group_key}}) ]
-  ) : jsonencode([for x in var.task_def : merge(x, { logConfiguration = {
-    logDriver = "awslogs"
-    options = {
-      "awslogs-group"         = "/ecs/${var.name}-${var.env}",
-      "awslogs-region"        = data.aws_region.current.name,
-      "awslogs-stream-prefix" = "ecs"
-    }
-    }
+    [for x in var.task_def : merge(x, { logConfiguration = { for k, v in lookup(x, "logConfiguration", null) : k => v if k != var.auto_generate_cw_group_key } })]
+    ) : jsonencode([for x in var.task_def : merge(x, { logConfiguration = {
+      logDriver = "awslogs"
+      options = {
+        "awslogs-group"         = "/ecs/${var.name}-${var.env}",
+        "awslogs-region"        = data.aws_region.current.name,
+        "awslogs-stream-prefix" = "ecs"
+      }
+      }
   })])
 }
 
 
 resource "aws_alb_target_group" "this" {
-  count                = length(var.https_listener_rules)
-  name                 = "${local.alias}-tg"
-  port                 = 80
-  protocol             = "HTTP"
-  vpc_id               = var.vpc_id
-  deregistration_delay = local.deregistration_delay
+  count                         = length(var.https_listener_rules)
+  name                          = "${local.alias}-tg"
+  port                          = 80
+  protocol                      = "HTTP"
+  vpc_id                        = var.vpc_id
+  deregistration_delay          = local.deregistration_delay
   load_balancing_algorithm_type = local.load_balancing_algorithm_type
   dynamic "health_check" {
     for_each = local.health_check.protocol == "TCP" ? [] : tolist([local.health_check])

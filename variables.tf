@@ -116,14 +116,14 @@ variable "ordered_placement_strategy" {
 
 variable "load_balancing_algorithm_type" {
   description = "alb algorithm"
-  type = string
-  default = "round_robin"
+  type        = string
+  default     = "round_robin"
 }
 
 variable "scheduling_strategy" {
   description = "ecs scheduling strategy. The valid values are REPLICA and DAEMON"
-  type = string
-  default = "REPLICA"
+  type        = string
+  default     = "REPLICA"
 }
 
 variable "auto_generate_cw_group_key" {
