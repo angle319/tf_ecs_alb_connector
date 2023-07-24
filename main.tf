@@ -17,7 +17,7 @@ locals {
   is_log                        = var.is_log
   log_taskdefs                  = [for x in var.task_def : x if lookup(x, "logConfiguration", null) != null]
   load_balancing_algorithm_type = var.load_balancing_algorithm_type
-  list_task_wtih_auto_cwlg      = [for x in [for x in var.task_def : { for k, v in lookup(x, "logConfiguration", null) : k => v if k == var.auto_generate_cw_group_key }] : x if x != {}]
+  list_task_wtih_auto_cwlg      = local.is_log == false ? [for x in var.task_def : { for k, v in x.logConfiguration : k => v if k == var.auto_generate_cw_group_key } if try(x["logConfiguration"]["cloudwatchGroupName"], null) != null] : []
 }
 
 data "aws_region" "current" {}
@@ -68,7 +68,7 @@ resource "aws_cloudwatch_log_group" "customize_naming" {
 resource "aws_ecs_task_definition" "this" {
   family = "${local.alias}-task"
   container_definitions = local.is_log == false ? jsonencode(
-    [for x in var.task_def : merge(x, { logConfiguration = { for k, v in lookup(x, "logConfiguration", null) : k => v if k != var.auto_generate_cw_group_key } })]
+    [for x in var.task_def : merge(x, { logConfiguration = { for k, v in lookup(x, "logConfiguration", null) : k => v if k != var.auto_generate_cw_group_key }  }) if try(x["logConfiguration"]["cloudwatchGroupName"], null) != null]
     ) : jsonencode([for x in var.task_def : merge(x, { logConfiguration = {
       logDriver = "awslogs"
       options = {
