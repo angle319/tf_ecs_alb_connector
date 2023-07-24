@@ -68,7 +68,7 @@ resource "aws_cloudwatch_log_group" "customize_naming" {
 resource "aws_ecs_task_definition" "this" {
   family = "${local.alias}-task"
   container_definitions = local.is_log == false ? jsonencode(
-    [for x in var.task_def : merge(x, { logConfiguration = { for k, v in lookup(x, "logConfiguration", null) : k => v if k != var.auto_generate_cw_group_key }  }) if try(x["logConfiguration"]["cloudwatchGroupName"], null) != null]
+    [for x in var.task_def : merge(x, { logConfiguration = { for k, v in lookup(x, "logConfiguration", null) : k => v if k != var.auto_generate_cw_group_key }  }) if try(x["logConfiguration"], null) != null]
     ) : jsonencode([for x in var.task_def : merge(x, { logConfiguration = {
       logDriver = "awslogs"
       options = {
