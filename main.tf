@@ -24,24 +24,16 @@ data "aws_region" "current" {}
 
 // is_log flag to generate aws log driver
 resource "aws_cloudwatch_log_group" "this" {
-  count = length(local.is_log == false ? [] : [for x in var.task_def : merge(x, { logConfiguration = {
+  count = local.is_log == false ? 0 : length([for x in var.task_def : x])
+  name = [for x in var.task_def : merge(x, { logConfiguration = {
     logDriver = "awslogs"
     options = {
-      "awslogs-group"         = "/ecs/${var.name}-${var.env}",
+      "awslogs-group"         = var.name == x.name ? "/ecs/${var.name}-${var.env}" : "/ecs/${var.name}-${x.name}-${var.env}",
       "awslogs-region"        = data.aws_region.current.name,
       "awslogs-stream-prefix" = "ecs"
     }
     }
-  })])
-  name = (local.is_log == false ? [] : [for x in var.task_def : merge(x, { logConfiguration = {
-    logDriver = "awslogs"
-    options = {
-      "awslogs-group"         = "/ecs/${var.name}-${var.env}",
-      "awslogs-region"        = data.aws_region.current.name,
-      "awslogs-stream-prefix" = "ecs"
-    }
-    }
-  })])[count.index].logConfiguration.options["awslogs-group"]
+  })][count.index].logConfiguration.options["awslogs-group"]
   retention_in_days = var.retention_in_days
   tags = {
     Name        = "${local.alias}-tg"
@@ -72,7 +64,7 @@ resource "aws_ecs_task_definition" "this" {
     ) : jsonencode([for x in var.task_def : merge(x, { logConfiguration = {
       logDriver = "awslogs"
       options = {
-        "awslogs-group"         = "/ecs/${var.name}-${var.env}",
+        "awslogs-group"         = var.name == x.name ? "/ecs/${var.name}-${var.env}" : "/ecs/${var.name}-${x.name}-${var.env}",
         "awslogs-region"        = data.aws_region.current.name,
         "awslogs-stream-prefix" = "ecs"
       }

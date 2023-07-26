@@ -39,7 +39,7 @@ variable "https_listener_rules" {
 }
 
 variable "task_def" {
-  type = list(any)
+  type = any
 }
 
 variable "priority" {
