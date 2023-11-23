@@ -74,7 +74,7 @@ resource "aws_ecs_task_definition" "this" {
 
 
 resource "aws_alb_target_group" "this" {
-  count                         = length(var.https_listener_rules)
+  count                         = 1
   name                          = "${local.alias}-tg"
   port                          = 80
   protocol                      = "HTTP"
