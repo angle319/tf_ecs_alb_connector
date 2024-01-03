@@ -130,3 +130,9 @@ variable "auto_generate_cw_group_key" {
   default = "cloudwatchGroupName"
 }
 
+variable "tags" {
+  type = map(string)
+  default = {
+    provision = "terraform"
+  }
+}
