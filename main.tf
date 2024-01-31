@@ -1,7 +1,7 @@
 locals {
   name          = var.name
   environment   = var.env
-  alias         = (var.alias != null) ? var.alias : "${local.name}-${var.env}"
+  alias         = (var.alias == null) ? "${local.name}-${var.env}" : var.alias
   desired_count = var.desired_count
   health_check = merge({
     path                = "/"
@@ -29,16 +29,17 @@ resource "aws_cloudwatch_log_group" "this" {
   name = [for x in var.task_def : merge(x, { logConfiguration = {
     logDriver = "awslogs"
     options = {
-      "awslogs-group"         = var.name == x.name ? "/ecs/${var.name}-${var.env}" : "/ecs/${var.name}-${x.name}-${var.env}",
+      "awslogs-group"         = var.name == x.name ? "/ecs/${local.alias}" : "/ecs/${var.name}-${x.name}-${var.env}",
       "awslogs-region"        = data.aws_region.current.name,
       "awslogs-stream-prefix" = "ecs"
     }
     }
   })][count.index].logConfiguration.options["awslogs-group"]
   retention_in_days = var.retention_in_days
-  tags = merge(local.tags, {
+  tags = merge({
+    author = "Angle Wang"
+    }, local.tags, {
     Name        = "${local.alias}-tg"
-    author      = "angle"
     provision   = "terraform"
     purpose     = "ecs-deployment"
     environment = local.environment
@@ -49,9 +50,10 @@ resource "aws_cloudwatch_log_group" "customize_naming" {
   count             = length(local.list_task_wtih_auto_cwlg)
   name              = (local.list_task_wtih_auto_cwlg)[count.index][var.auto_generate_cw_group_key]
   retention_in_days = var.retention_in_days
-  tags = merge(local.tags, {
+  tags = merge({
+    author = "Angle Wang"
+    }, local.tags, {
     Name        = "${local.alias}-tg"
-    author      = "angle"
     provision   = "terraform"
     purpose     = "ecs-deployment"
     environment = local.environment
@@ -65,14 +67,16 @@ resource "aws_ecs_task_definition" "this" {
     ) : jsonencode([for x in var.task_def : merge(x, { logConfiguration = {
       logDriver = "awslogs"
       options = {
-        "awslogs-group"         = var.name == x.name ? "/ecs/${var.name}-${var.env}" : "/ecs/${var.name}-${x.name}-${var.env}",
+        "awslogs-group"         = var.name == x.name ? "/ecs/${local.alias}" : "/ecs/${var.name}-${x.name}-${var.env}",
         "awslogs-region"        = data.aws_region.current.name,
         "awslogs-stream-prefix" = "ecs"
       }
       }
   })])
-  tags = merge(local.tags, {
-    author      = "angle"
+  tags = merge({
+    author = "Angle Wang"
+    }, local.tags, {
+    Name        = "${local.alias}-tg"
     provision   = "terraform"
     purpose     = "ecs-deployment"
     environment = local.environment
@@ -81,7 +85,7 @@ resource "aws_ecs_task_definition" "this" {
 
 
 resource "aws_alb_target_group" "this" {
-  count                         = 1
+  count                         = var.mapping_port == 0 ? 0 : 1
   name                          = "${local.alias}-tg"
   port                          = 80
   protocol                      = "HTTP"
@@ -102,9 +106,10 @@ resource "aws_alb_target_group" "this" {
     }
   }
 
-  tags = merge(local.tags, {
+  tags = merge({
+    author = "Angle Wang"
+    }, local.tags, {
     Name        = "${local.alias}-tg"
-    author      = "angle"
     provision   = "terraform"
     purpose     = "ecs-deployment"
     environment = local.environment
@@ -112,114 +117,148 @@ resource "aws_alb_target_group" "this" {
 }
 
 resource "aws_lb_listener_rule" "rule" {
-  count        = length(var.https_listener_rules)
-  listener_arn = var.listener_arn
-  priority     = lookup(var.https_listener_rules[count.index], "priority", null)
+  for_each     = { for i, v in var.https_listener_rules : i => v }
+  listener_arn = try(var.listener_arn, null)
+  priority     = try(each.value.priority, null)
+
+  dynamic "action" {
+    for_each = [for action in try(each.value.actions, []) : action if action.type == "authenticate-cognito"]
+
+    content {
+      type  = "authenticate-cognito"
+      order = try(action.value.order, null)
+
+      authenticate_cognito {
+        authentication_request_extra_params = try(action.value.authentication_request_extra_params, null)
+        on_unauthenticated_request          = try(action.value.on_unauthenticated_request, null)
+        scope                               = try(action.value.scope, null)
+        session_cookie_name                 = try(action.value.session_cookie_name, null)
+        session_timeout                     = try(action.value.session_timeout, null)
+        user_pool_arn                       = action.value.user_pool_arn
+        user_pool_client_id                 = action.value.user_pool_client_id
+        user_pool_domain                    = action.value.user_pool_domain
+      }
+    }
+  }
+
+  dynamic "action" {
+    for_each = [for action in try(each.value.actions, []) : action if action.type == "authenticate-oidc"]
+
+    content {
+      type  = "authenticate-oidc"
+      order = try(action.value.order, null)
+
+      authenticate_oidc {
+        authentication_request_extra_params = try(action.value.authentication_request_extra_params, null)
+        authorization_endpoint              = action.value.authorization_endpoint
+        client_id                           = action.value.client_id
+        client_secret                       = action.value.client_secret
+        issuer                              = action.value.issuer
+        on_unauthenticated_request          = try(action.value.on_unauthenticated_request, null)
+        scope                               = try(action.value.scope, null)
+        session_cookie_name                 = try(action.value.session_cookie_name, null)
+        session_timeout                     = try(action.value.session_timeout, null)
+        token_endpoint                      = action.value.token_endpoint
+        user_info_endpoint                  = action.value.user_info_endpoint
+      }
+    }
+  }
 
   action {
     type             = "forward"
     target_group_arn = aws_alb_target_group.this[0].arn
   }
 
-  # Path Pattern condition
   dynamic "condition" {
     for_each = [
-      for condition_rule in var.https_listener_rules[count.index].conditions :
-      condition_rule
-      if length(lookup(condition_rule, "path_patterns", [])) > 0
-    ]
-
-    content {
-      path_pattern {
-        values = condition.value["path_patterns"]
-      }
-    }
-  }
-
-  # Host header condition
-  dynamic "condition" {
-    for_each = [
-      for condition_rule in var.https_listener_rules[count.index].conditions :
-      condition_rule
-      if length(lookup(condition_rule, "host_headers", [])) > 0
+      for rule in each.value.conditions : rule
+      if length(try(rule.host_header, rule.host_headers, [])) > 0
     ]
 
     content {
       host_header {
-        values = condition.value["host_headers"]
+        values = try(condition.value.host_header, condition.value.host_headers)
       }
     }
   }
 
-  # Http header condition
   dynamic "condition" {
-    for_each = [
-      for condition_rule in var.https_listener_rules[count.index].conditions :
-      condition_rule
-      if length(lookup(condition_rule, "http_headers", [])) > 0
-    ]
+    for_each = try(each.value.conditions, [])
 
     content {
       dynamic "http_header" {
-        for_each = condition.value["http_headers"]
+        for_each = try(condition.value.http_header, condition.value.http_headers, [])
 
         content {
-          http_header_name = http_header.value["http_header_name"]
-          values           = http_header.value["values"]
+          http_header_name = http_header.value.http_header_name
+          values           = http_header.value.values
         }
       }
     }
   }
 
-  # Http request method condition
   dynamic "condition" {
     for_each = [
-      for condition_rule in var.https_listener_rules[count.index].conditions :
-      condition_rule
-      if length(lookup(condition_rule, "http_request_methods", [])) > 0
+      for rule in each.value.conditions : rule
+      if length(try(rule.http_request_method, rule.http_request_methods, [])) > 0
     ]
 
     content {
       http_request_method {
-        values = condition.value["http_request_methods"]
+        values = try(condition.value.http_request_method, condition.value.http_request_methods)
       }
     }
   }
 
-  # Query string condition
   dynamic "condition" {
     for_each = [
-      for condition_rule in var.https_listener_rules[count.index].conditions :
-      condition_rule
-      if length(lookup(condition_rule, "query_strings", [])) > 0
+      for rule in each.value.conditions : rule
+      if length(try(rule.path_pattern, rule.path_patterns, [])) > 0
     ]
 
     content {
+      path_pattern {
+        values = try(condition.value.path_pattern, condition.value.path_patterns)
+      }
+    }
+  }
+
+  dynamic "condition" {
+    for_each = try(each.value.conditions, [])
+
+    content {
       dynamic "query_string" {
-        for_each = condition.value["query_strings"]
+        for_each = try(condition.value.query_string, condition.value.query_strings, [])
 
         content {
-          key   = lookup(query_string.value, "key", null)
-          value = query_string.value["value"]
+          key   = try(query_string.value.key, null)
+          value = query_string.value.value
         }
       }
     }
   }
 
-  # Source IP address condition
   dynamic "condition" {
     for_each = [
-      for condition_rule in var.https_listener_rules[count.index].conditions :
-      condition_rule
-      if length(lookup(condition_rule, "source_ips", [])) > 0
+      for rule in each.value.conditions : rule
+      if length(try(rule.source_ip, rule.source_ips, [])) > 0
     ]
 
     content {
       source_ip {
-        values = condition.value["source_ips"]
+        values = try(condition.value.source_ip, condition.value.source_ips)
       }
     }
   }
+
+  tags = merge({
+    author = "Angle Wang"
+    }, local.tags, {
+    Name        = "${local.alias}-tg"
+    provision   = "terraform"
+    purpose     = "ecs-deployment"
+    environment = local.environment
+  })
 }
 
 data "aws_ecs_task_definition" "this" {
@@ -253,7 +292,7 @@ resource "aws_ecs_service" "this" {
     for_each = var.mapping_port == 0 ? [] : [{}]
     content {
       target_group_arn = aws_alb_target_group.this[0].arn
-      container_name   = local.name
+      container_name   = (var.alias == null) ? local.name : var.alias
       container_port   = var.mapping_port
     }
   }
@@ -279,8 +318,10 @@ resource "aws_ecs_service" "this" {
       container_name = service_registries.value["container_name"]
     }
   }
-  tags = merge(local.tags, {
-    author      = "angle"
+  tags = merge({
+    author = "Angle Wang"
+    }, local.tags, {
+    Name        = "${local.alias}-tg"
     provision   = "terraform"
     purpose     = "ecs-deployment"
     environment = local.environment
