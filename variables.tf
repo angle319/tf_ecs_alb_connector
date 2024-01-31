@@ -10,6 +10,11 @@ variable "env" {
   type = string
 }
 
+variable "alias" {
+  type    = string
+  default = null
+}
+
 variable "listener_arn" {
   type    = string
   default = ""

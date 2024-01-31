@@ -1,7 +1,7 @@
 locals {
   name          = var.name
   environment   = var.env
-  alias         = "${local.name}-${var.env}"
+  alias         = (var.alias != null) ? var.alias : "${local.name}-${var.env}"
   desired_count = var.desired_count
   health_check = merge({
     path                = "/"

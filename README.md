@@ -55,6 +55,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_alias"></a> [alias](#input\_alias) | n/a | `string` | `null` | no |
 | <a name="input_auto_generate_cw_group_key"></a> [auto\_generate\_cw\_group\_key](#input\_auto\_generate\_cw\_group\_key) | n/a | `string` | `"cloudwatchGroupName"` | no |
 | <a name="input_cs_id"></a> [cs\_id](#input\_cs\_id) | n/a | `string` | n/a | yes |
 | <a name="input_deployment_maximum_percent"></a> [deployment\_maximum\_percent](#input\_deployment\_maximum\_percent) | ecs maximun healthy percent | `number` | `200` | no |
