@@ -61,7 +61,7 @@ resource "aws_cloudwatch_log_group" "customize_naming" {
 }
 
 resource "aws_ecs_task_definition" "this" {
-  family = "${local.alias}-task"
+  family = var.ecs_task_name == null ? "${local.alias}-task" : var.ecs_task_name
   container_definitions = local.is_log == false ? jsonencode(
     [for x in var.task_def : merge(x, { logConfiguration = { for k, v in lookup(x, "logConfiguration", null) : k => v if k != var.auto_generate_cw_group_key } }) if try(x["logConfiguration"], null) != null]
     ) : jsonencode([for x in var.task_def : merge(x, { logConfiguration = {
@@ -269,7 +269,7 @@ data "aws_ecs_task_definition" "this" {
 }
 
 resource "aws_ecs_service" "this" {
-  name    = "${local.name}-svc"
+  name    = var.ecs_service_name == null ? "${local.name}-svc" : var.ecs_service_name
   cluster = var.cs_id
   #  task_definition                    = "${aws_ecs_task_definition.this.family}:${max("${aws_ecs_task_definition.this.revision}", "${data.aws_ecs_task_definition.this.revision}")}"
   task_definition                    = "${aws_ecs_task_definition.this.family}:${max("${aws_ecs_task_definition.this.revision}", "${data.aws_ecs_task_definition.this.revision}")}"

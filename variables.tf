@@ -24,6 +24,15 @@ variable "name" {
   type = string
 }
 
+variable "ecs_service_name" {
+  type    = string
+  default = null
+}
+
+variable "ecs_task_name" {
+  type    = string
+  default = null
+}
 
 variable "health_check" {
   type        = map(any)

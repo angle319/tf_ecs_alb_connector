@@ -65,6 +65,8 @@ No modules.
 | <a name="input_deployment_minimum_healthy_percent"></a> [deployment\_minimum\_healthy\_percent](#input\_deployment\_minimum\_healthy\_percent) | ecs minimum healthy percent | `number` | `100` | no |
 | <a name="input_deregistration_delay"></a> [deregistration\_delay](#input\_deregistration\_delay) | ALB deregister delay time | `number` | `30` | no |
 | <a name="input_desired_count"></a> [desired\_count](#input\_desired\_count) | task number | `number` | `1` | no |
+| <a name="input_ecs_service_name"></a> [ecs\_service\_name](#input\_ecs\_service\_name) | n/a | `string` | `null` | no |
+| <a name="input_ecs_task_name"></a> [ecs\_task\_name](#input\_ecs\_task\_name) | n/a | `string` | `null` | no |
 | <a name="input_env"></a> [env](#input\_env) | n/a | `string` | n/a | yes |
 | <a name="input_health_check"></a> [health\_check](#input\_health\_check) | Health checks for Target Group | `map(any)` | <pre>{<br>  "healthy_threshold": "5",<br>  "interval": "30",<br>  "path": "/",<br>  "protocol": "HTTP",<br>  "timeout": "5",<br>  "unhealthy_threshold": "2"<br>}</pre> | no |
 | <a name="input_https_listener_rules"></a> [https\_listener\_rules](#input\_https\_listener\_rules) | A list of maps describing the Listener Rules for this ALB. Required key/values: actions, conditions. Optional key/values: priority, https\_listener\_index (default to https\_listeners[count.index]) | `any` | `[]` | no |
