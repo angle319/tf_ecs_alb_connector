@@ -105,7 +105,15 @@ resource "aws_alb_target_group" "this" {
       protocol            = local.health_check["protocol"]
     }
   }
-
+  dynamic "stickiness" {
+    for_each = var.lb_stickiness == null ? [] : [var.lb_stickiness]
+    content {
+      cookie_duration = try(stickiness.value.cookie_duration, null)
+      cookie_name     = try(stickiness.value.cookie_name, null)
+      enabled         = try(stickiness.value.enabled, true)
+      type            = try(stickiness.value.type, "app_cookie")
+    }
+  }
   tags = merge({
     author = "Angle Wang"
     }, local.tags, {

@@ -150,3 +150,16 @@ variable "tags" {
     provision = "terraform"
   }
 }
+
+variable "lb_stickiness" {
+  type    = any
+  default = null
+  /*
+   * default = {
+   *   cookie_duration = null
+   *   cookie_name = null
+   *   enabled = null
+   *   type = null
+   * }
+   */
+}

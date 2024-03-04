@@ -72,6 +72,7 @@ No modules.
 | <a name="input_https_listener_rules"></a> [https\_listener\_rules](#input\_https\_listener\_rules) | A list of maps describing the Listener Rules for this ALB. Required key/values: actions, conditions. Optional key/values: priority, https\_listener\_index (default to https\_listeners[count.index]) | `any` | `[]` | no |
 | <a name="input_is_default_tg"></a> [is\_default\_tg](#input\_is\_default\_tg) | n/a | `bool` | `false` | no |
 | <a name="input_is_log"></a> [is\_log](#input\_is\_log) | container auto aws driver with log | `bool` | `true` | no |
+| <a name="input_lb_stickiness"></a> [lb\_stickiness](#input\_lb\_stickiness) | n/a | `any` | `null` | no |
 | <a name="input_listener_arn"></a> [listener\_arn](#input\_listener\_arn) | n/a | `string` | `""` | no |
 | <a name="input_load_balancing_algorithm_type"></a> [load\_balancing\_algorithm\_type](#input\_load\_balancing\_algorithm\_type) | alb algorithm | `string` | `"round_robin"` | no |
 | <a name="input_mapping_port"></a> [mapping\_port](#input\_mapping\_port) | n/a | `number` | `0` | no |
