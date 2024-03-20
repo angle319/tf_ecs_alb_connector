@@ -44,6 +44,7 @@ variable "health_check" {
     interval            = "30"
     timeout             = "5"
     protocol            = "HTTP"
+    matcher             = "200"
   }
 }
 variable "https_listener_rules" {

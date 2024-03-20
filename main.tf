@@ -9,6 +9,7 @@ locals {
     unhealthy_threshold = "2"
     interval            = "30"
     timeout             = "5"
+    matcher             = "200"
     protocol            = "HTTP"
   }, var.health_check)
   container_definitions         = jsonencode(var.task_def)
@@ -103,6 +104,7 @@ resource "aws_alb_target_group" "this" {
       interval            = local.health_check["interval"]
       timeout             = local.health_check["timeout"]
       protocol            = local.health_check["protocol"]
+      matcher             = local.health_check["matcher"]
     }
   }
   dynamic "stickiness" {
