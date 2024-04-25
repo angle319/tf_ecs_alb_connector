@@ -57,6 +57,11 @@ variable "task_def" {
   type = any
 }
 
+variable "volume" {
+  type    = any
+  default = null
+}
+
 variable "priority" {
   type    = number
   default = 1

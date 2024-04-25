@@ -85,6 +85,7 @@ No modules.
 | <a name="input_service_registries"></a> [service\_registries](#input\_service\_registries) | service discovery | `map(string)` | `{}` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | n/a | `map(string)` | <pre>{<br>  "provision": "terraform"<br>}</pre> | no |
 | <a name="input_task_def"></a> [task\_def](#input\_task\_def) | n/a | `any` | n/a | yes |
+| <a name="input_volume"></a> [volume](#input\_volume) | n/a | `any` | `null` | no |
 | <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | n/a | `string` | n/a | yes |
 
 ## Outputs

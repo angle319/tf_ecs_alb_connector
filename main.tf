@@ -74,6 +74,29 @@ resource "aws_ecs_task_definition" "this" {
       }
       }
   })])
+
+  dynamic "volume" {
+    for_each = (var.volume == null) ? [] : [var.volume]
+
+    content {
+      dynamic "docker_volume_configuration" {
+        for_each = (try(volume.value.docker_volume_configuration, null) == null) ? [] : [volume.value.docker_volume_configuration]
+        content {
+          autoprovision = try(docker_volume_configuration.value.autoprovision, null)
+          driver_opts   = try(docker_volume_configuration.value.driver_opts, null)
+          driver        = try(docker_volume_configuration.value.driver, null)
+          labels        = try(docker_volume_configuration.value.labels, null)
+          scope         = try(docker_volume_configuration.value.scope, null)
+        }
+      }
+      //TODO efs_volume_configuration
+      //TODO fsx_windows_file_server_volume_configuration
+      # efs_volume_configuration = try(volume.value.efs_volume_configuration, null)
+      # fsx_windows_file_server_volume_configuration = try(volume.value.fsx_windows_file_server_volume_configuration,null)
+      host_path = try(volume.value.host_path, null)
+      name      = volume.value.name
+    }
+  }
   tags = merge({
     author = "Angle Wang"
     }, local.tags, {
