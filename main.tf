@@ -89,9 +89,25 @@ resource "aws_ecs_task_definition" "this" {
           scope         = try(docker_volume_configuration.value.scope, null)
         }
       }
-      //TODO efs_volume_configuration
+
+      dynamic "efs_volume_configuration" {
+        for_each = (try(volume.value.efs_volume_configuration, null) == null) ? [] : [volume.value.efs_volume_configuration]
+        content {
+          file_system_id          = try(efs_volume_configuration.value.file_system_id, null)
+          root_directory          = try(efs_volume_configuration.value.root_directory, null)
+          transit_encryption      = try(efs_volume_configuration.value.transit_encryption, null)
+          transit_encryption_port = try(efs_volume_configuration.value.transit_encryption_port, null)
+
+          dynamic "authorization_config" {
+            for_each = try(efs_volume_configuration.value.authorization_config, {}) != {} ? [efs_volume_configuration.value.authorization_config] : []
+            content {
+              access_point_id = try(efs_volume_configuration.value.authorization_config.value.access_point_id, null)
+              iam             = try(efs_volume_configuration.value.authorization_config.value.iam, null)
+            }
+          }
+        }
+      }
       //TODO fsx_windows_file_server_volume_configuration
-      # efs_volume_configuration = try(volume.value.efs_volume_configuration, null)
       # fsx_windows_file_server_volume_configuration = try(volume.value.fsx_windows_file_server_volume_configuration,null)
       host_path = try(volume.value.host_path, null)
       name      = volume.value.name
