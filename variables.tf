@@ -169,3 +169,8 @@ variable "lb_stickiness" {
    * }
    */
 }
+
+variable "launch_type" {
+  type    = string
+  default = "EC2"
+}
