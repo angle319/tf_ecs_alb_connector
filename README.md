@@ -60,6 +60,7 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_alias"></a> [alias](#input\_alias) | n/a | `string` | `null` | no |
 | <a name="input_auto_generate_cw_group_key"></a> [auto\_generate\_cw\_group\_key](#input\_auto\_generate\_cw\_group\_key) | n/a | `string` | `"cloudwatchGroupName"` | no |
+| <a name="input_capacity_provider_strategy"></a> [capacity\_provider\_strategy](#input\_capacity\_provider\_strategy) | n/a | `list(any)` | `[]` | no |
 | <a name="input_cs_id"></a> [cs\_id](#input\_cs\_id) | n/a | `string` | n/a | yes |
 | <a name="input_deployment_maximum_percent"></a> [deployment\_maximum\_percent](#input\_deployment\_maximum\_percent) | ecs maximun healthy percent | `number` | `200` | no |
 | <a name="input_deployment_minimum_healthy_percent"></a> [deployment\_minimum\_healthy\_percent](#input\_deployment\_minimum\_healthy\_percent) | ecs minimum healthy percent | `number` | `100` | no |
@@ -68,6 +69,7 @@ No modules.
 | <a name="input_ecs_service_name"></a> [ecs\_service\_name](#input\_ecs\_service\_name) | n/a | `string` | `null` | no |
 | <a name="input_ecs_task_name"></a> [ecs\_task\_name](#input\_ecs\_task\_name) | n/a | `string` | `null` | no |
 | <a name="input_env"></a> [env](#input\_env) | n/a | `string` | n/a | yes |
+| <a name="input_fargate"></a> [fargate](#input\_fargate) | n/a | `any` | <pre>{<br>  "cpu": 256,<br>  "memory": 512,<br>  "role_arn": null<br>}</pre> | no |
 | <a name="input_health_check"></a> [health\_check](#input\_health\_check) | Health checks for Target Group | `map(any)` | <pre>{<br>  "healthy_threshold": "5",<br>  "interval": "30",<br>  "matcher": "200",<br>  "path": "/",<br>  "protocol": "HTTP",<br>  "timeout": "5",<br>  "unhealthy_threshold": "2"<br>}</pre> | no |
 | <a name="input_https_listener_rules"></a> [https\_listener\_rules](#input\_https\_listener\_rules) | A list of maps describing the Listener Rules for this ALB. Required key/values: actions, conditions. Optional key/values: priority, https\_listener\_index (default to https\_listeners[count.index]) | `any` | `[]` | no |
 | <a name="input_is_default_tg"></a> [is\_default\_tg](#input\_is\_default\_tg) | n/a | `bool` | `false` | no |
@@ -78,6 +80,7 @@ No modules.
 | <a name="input_load_balancing_algorithm_type"></a> [load\_balancing\_algorithm\_type](#input\_load\_balancing\_algorithm\_type) | alb algorithm | `string` | `"round_robin"` | no |
 | <a name="input_mapping_port"></a> [mapping\_port](#input\_mapping\_port) | n/a | `number` | `0` | no |
 | <a name="input_name"></a> [name](#input\_name) | n/a | `string` | n/a | yes |
+| <a name="input_network_configuration"></a> [network\_configuration](#input\_network\_configuration) | n/a | `any` | `null` | no |
 | <a name="input_ordered_placement_strategy"></a> [ordered\_placement\_strategy](#input\_ordered\_placement\_strategy) | ecs container order strategy | `map(string)` | <pre>{<br>  "field": "instanceId",<br>  "type": "spread"<br>}</pre> | no |
 | <a name="input_placement_constraints"></a> [placement\_constraints](#input\_placement\_constraints) | ecs container constraints | `map(string)` | `{}` | no |
 | <a name="input_priority"></a> [priority](#input\_priority) | n/a | `number` | `1` | no |

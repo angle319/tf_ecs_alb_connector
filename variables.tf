@@ -174,3 +174,37 @@ variable "launch_type" {
   type    = string
   default = "EC2"
 }
+
+variable "fargate" {
+  # type    = object({
+  #   cpu     = number
+  #   memory   = number
+  #   role_arn = string
+  # })
+  type = any
+  default = {
+    cpu      = 256
+    memory   = 512
+    role_arn = null
+  }
+}
+
+variable "network_configuration" {
+  # type = object({
+  #   assign_public_ip = bool
+  #   security_groups  = list(string)
+  #   subnets = list(string)
+  # })
+  type    = any
+  default = null
+}
+
+variable "capacity_provider_strategy" {
+  # type = {
+  #   capacity_provider = string
+  #   weight = number
+  #   base = number
+  # }
+  type    = list(any)
+  default = []
+}

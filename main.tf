@@ -19,6 +19,7 @@ locals {
   log_taskdefs                  = [for x in var.task_def : x if lookup(x, "logConfiguration", null) != null]
   load_balancing_algorithm_type = var.load_balancing_algorithm_type
   list_task_wtih_auto_cwlg      = local.is_log == false ? [for x in var.task_def : { for k, v in x.logConfiguration : k => v if k == var.auto_generate_cw_group_key } if try(x["logConfiguration"]["cloudwatchGroupName"], null) != null] : []
+  is_fargate                    = var.launch_type == "FARGATE"
   tags                          = var.tags
 }
 
@@ -74,7 +75,17 @@ resource "aws_ecs_task_definition" "this" {
       }
       }
   })])
-
+  requires_compatibilities = local.is_fargate ? ["FARGATE"] : null
+  network_mode             = local.is_fargate ? "awsvpc" : null
+  cpu                      = local.is_fargate ? var.fargate.cpu : null
+  memory                   = local.is_fargate ? var.fargate.memory : null
+  execution_role_arn       = local.is_fargate ? var.fargate.role_arn : null
+  dynamic "runtime_platform" {
+    for_each = local.is_fargate ? [{}] : []
+    content {
+      operating_system_family = "LINUX"
+    }
+  }
   dynamic "volume" {
     for_each = (var.volume == null) ? [] : [var.volume]
 
@@ -132,6 +143,7 @@ resource "aws_alb_target_group" "this" {
   vpc_id                        = var.vpc_id
   deregistration_delay          = local.deregistration_delay
   load_balancing_algorithm_type = local.load_balancing_algorithm_type
+  target_type                   = local.is_fargate ? "ip" : null
   dynamic "health_check" {
     for_each = local.health_check.protocol == "TCP" ? [] : tolist([local.health_check])
 
@@ -308,6 +320,7 @@ resource "aws_lb_listener_rule" "rule" {
     purpose     = "ecs-deployment"
     environment = local.environment
   })
+  depends_on = [aws_alb_target_group.this]
 }
 
 data "aws_ecs_task_definition" "this" {
@@ -322,16 +335,40 @@ resource "aws_ecs_service" "this" {
   cluster = var.cs_id
   #  task_definition                    = "${aws_ecs_task_definition.this.family}:${max("${aws_ecs_task_definition.this.revision}", "${data.aws_ecs_task_definition.this.revision}")}"
   task_definition                    = "${aws_ecs_task_definition.this.family}:${max("${aws_ecs_task_definition.this.revision}", "${data.aws_ecs_task_definition.this.revision}")}"
-  desired_count                      = local.desired_count
-  launch_type                        = var.launch_type
+  launch_type                        = length(var.capacity_provider_strategy) > 0 ? null : var.launch_type
   force_new_deployment               = true
-  deployment_maximum_percent         = var.deployment_maximum_percent
-  deployment_minimum_healthy_percent = var.deployment_minimum_healthy_percent
+  desired_count                      = local.desired_count
+  deployment_maximum_percent         = local.is_fargate ? null : var.deployment_maximum_percent
+  deployment_minimum_healthy_percent = local.is_fargate ? null : var.deployment_minimum_healthy_percent
   scheduling_strategy                = var.scheduling_strategy
   health_check_grace_period_seconds  = length(keys(var.service_registries)) == 0 ? (length(var.https_listener_rules) == 0 ? null : 200) : 0
 
+  dynamic "network_configuration" {
+    for_each = local.is_fargate ? [var.network_configuration] : []
+
+    content {
+      assign_public_ip = network_configuration.value.assign_public_ip
+      security_groups  = network_configuration.value.security_groups
+      subnets          = network_configuration.value.subnets
+    }
+  }
+  # capacity_provider_strategy {
+  #   capacity_provider = "FARGATE_SPOT"
+  #   weight            = 50
+  #   base              = 0
+  # }
+  dynamic "capacity_provider_strategy" {
+    # Set by task set if deployment controller is external
+    for_each = { for k, v in var.capacity_provider_strategy : k => v }
+
+    content {
+      base              = try(capacity_provider_strategy.value.base, null)
+      capacity_provider = capacity_provider_strategy.value.capacity_provider
+      weight            = try(capacity_provider_strategy.value.weight, null)
+    }
+  }
   dynamic "ordered_placement_strategy" {
-    for_each = length(keys(var.ordered_placement_strategy)) == 0 ? [] : [var.ordered_placement_strategy]
+    for_each = (local.is_fargate || length(keys(var.ordered_placement_strategy)) == 0) ? [] : [var.ordered_placement_strategy]
     content {
       type  = ordered_placement_strategy.value["type"]
       field = ordered_placement_strategy.value["field"]
@@ -354,7 +391,7 @@ resource "aws_ecs_service" "this" {
   #   expression = "attribute:ecs.availability-zone in [us-west-2a, us-west-2b]"
   # }
   dynamic "placement_constraints" {
-    for_each = length(keys(var.placement_constraints)) == 0 ? [] : [var.placement_constraints]
+    for_each = (local.is_fargate || length(keys(var.placement_constraints)) == 0) ? [] : [var.placement_constraints]
     content {
       type       = placement_constraints.value["type"]
       expression = placement_constraints.value["expression"]
