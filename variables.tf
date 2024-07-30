@@ -183,9 +183,8 @@ variable "fargate" {
   # })
   type = any
   default = {
-    cpu      = 256
-    memory   = 512
-    role_arn = null
+    cpu    = 256
+    memory = 512
   }
 }
 
@@ -207,4 +206,10 @@ variable "capacity_provider_strategy" {
   # }
   type    = list(any)
   default = []
+}
+
+variable "task_exec_iam_role_arn" {
+  description = "Existing IAM role ARN"
+  type        = string
+  default     = null
 }

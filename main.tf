@@ -79,7 +79,7 @@ resource "aws_ecs_task_definition" "this" {
   network_mode             = local.is_fargate ? "awsvpc" : null
   cpu                      = local.is_fargate ? var.fargate.cpu : null
   memory                   = local.is_fargate ? var.fargate.memory : null
-  execution_role_arn       = local.is_fargate ? var.fargate.role_arn : null
+  execution_role_arn       = var.task_exec_iam_role_arn
   dynamic "runtime_platform" {
     for_each = local.is_fargate ? [{}] : []
     content {
@@ -225,9 +225,51 @@ resource "aws_lb_listener_rule" "rule" {
     }
   }
 
-  action {
-    type             = "forward"
-    target_group_arn = aws_alb_target_group.this[0].arn
+  dynamic "action" {
+    for_each = [for action in try(each.value.actions, [{
+      type = "forward"
+    }]) : action if action.type == "forward"]
+
+    content {
+      order            = try(action.value.order, null)
+      target_group_arn = try(action.value.target_group_arn, aws_alb_target_group.this[0].arn, null)
+      type             = "forward"
+    }
+  }
+
+  dynamic "action" {
+    for_each = [for action in try(each.value.actions, []) : action if action.type == "redirect"]
+
+    content {
+      order = try(action.value.order, null)
+
+      redirect {
+        host        = try(action.value.host, null)
+        path        = try(action.value.path, null)
+        port        = try(action.value.port, null)
+        protocol    = try(action.value.protocol, null)
+        query       = try(action.value.query, null)
+        status_code = action.value.status_code
+      }
+
+      type = "redirect"
+    }
+  }
+
+  dynamic "action" {
+    for_each = [for action in try(each.value.actions, []) : action if action.type == "fixed-response"]
+
+    content {
+      fixed_response {
+        content_type = action.value.content_type
+        message_body = try(action.value.message_body, null)
+        status_code  = try(action.value.status_code, null)
+      }
+
+      order = try(action.value.order, null)
+
+      type = "fixed-response"
+    }
   }
 
   dynamic "condition" {
