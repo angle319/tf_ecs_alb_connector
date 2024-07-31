@@ -80,6 +80,7 @@ resource "aws_ecs_task_definition" "this" {
   cpu                      = local.is_fargate ? var.fargate.cpu : null
   memory                   = local.is_fargate ? var.fargate.memory : null
   execution_role_arn       = var.task_exec_iam_role_arn
+  task_role_arn            = var.tasks_iam_role_arn
   dynamic "runtime_platform" {
     for_each = local.is_fargate ? [{}] : []
     content {

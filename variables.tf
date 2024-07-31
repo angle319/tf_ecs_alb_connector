@@ -213,3 +213,9 @@ variable "task_exec_iam_role_arn" {
   type        = string
   default     = null
 }
+
+variable "tasks_iam_role_arn" {
+  description = "Existing IAM role ARN"
+  type        = string
+  default     = null
+}
