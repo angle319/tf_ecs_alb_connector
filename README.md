@@ -86,6 +86,7 @@ No modules.
 | <a name="input_priority"></a> [priority](#input\_priority) | n/a | `number` | `1` | no |
 | <a name="input_retention_in_days"></a> [retention\_in\_days](#input\_retention\_in\_days) | task number | `number` | `14` | no |
 | <a name="input_scheduling_strategy"></a> [scheduling\_strategy](#input\_scheduling\_strategy) | ecs scheduling strategy. The valid values are REPLICA and DAEMON | `string` | `"REPLICA"` | no |
+| <a name="input_service_connect_configuration"></a> [service\_connect\_configuration](#input\_service\_connect\_configuration) | The ECS Service Connect configuration for this service to discover and connect to services, and be discovered by, and connected from, other services within a namespace | `any` | `{}` | no |
 | <a name="input_service_registries"></a> [service\_registries](#input\_service\_registries) | service discovery | `map(string)` | `{}` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | n/a | `map(string)` | <pre>{<br>  "provision": "terraform"<br>}</pre> | no |
 | <a name="input_task_def"></a> [task\_def](#input\_task\_def) | n/a | `any` | n/a | yes |
