@@ -219,3 +219,9 @@ variable "tasks_iam_role_arn" {
   type        = string
   default     = null
 }
+
+variable "service_connect_configuration" {
+  description = "The ECS Service Connect configuration for this service to discover and connect to services, and be discovered by, and connected from, other services within a namespace"
+  type        = any
+  default     = {}
+}
