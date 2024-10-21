@@ -367,7 +367,7 @@ resource "aws_lb_listener_rule" "rule" {
 }
 
 data "aws_ecs_task_definition" "this" {
-  task_definition = "${local.alias}-task"
+  task_definition = var.ecs_task_name == null ? "${local.alias}-task" : var.ecs_task_name
   depends_on = [
     aws_ecs_task_definition.this
   ]
