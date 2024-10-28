@@ -81,6 +81,7 @@ No modules.
 | <a name="input_mapping_port"></a> [mapping\_port](#input\_mapping\_port) | n/a | `number` | `0` | no |
 | <a name="input_name"></a> [name](#input\_name) | n/a | `string` | n/a | yes |
 | <a name="input_network_configuration"></a> [network\_configuration](#input\_network\_configuration) | n/a | `any` | `null` | no |
+| <a name="input_network_mode"></a> [network\_mode](#input\_network\_mode) | n/a | `string` | `null` | no |
 | <a name="input_ordered_placement_strategy"></a> [ordered\_placement\_strategy](#input\_ordered\_placement\_strategy) | ecs container order strategy | `map(string)` | <pre>{<br>  "field": "instanceId",<br>  "type": "spread"<br>}</pre> | no |
 | <a name="input_placement_constraints"></a> [placement\_constraints](#input\_placement\_constraints) | ecs container constraints | `map(string)` | `{}` | no |
 | <a name="input_priority"></a> [priority](#input\_priority) | n/a | `number` | `1` | no |

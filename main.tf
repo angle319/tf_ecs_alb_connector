@@ -76,7 +76,7 @@ resource "aws_ecs_task_definition" "this" {
       }
   })])
   requires_compatibilities = local.is_fargate ? ["FARGATE"] : null
-  network_mode             = local.is_fargate ? "awsvpc" : null
+  network_mode             = local.is_fargate ? "awsvpc" : var.network_mode
   cpu                      = local.is_fargate ? var.fargate.cpu : null
   memory                   = local.is_fargate ? var.fargate.memory : null
   execution_role_arn       = var.task_exec_iam_role_arn

@@ -225,3 +225,8 @@ variable "service_connect_configuration" {
   type        = any
   default     = {}
 }
+
+variable "network_mode" {
+  type    = string
+  default = null
+}
