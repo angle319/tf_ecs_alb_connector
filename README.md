@@ -90,6 +90,7 @@ No modules.
 | <a name="input_service_connect_configuration"></a> [service\_connect\_configuration](#input\_service\_connect\_configuration) | The ECS Service Connect configuration for this service to discover and connect to services, and be discovered by, and connected from, other services within a namespace | `any` | `{}` | no |
 | <a name="input_service_registries"></a> [service\_registries](#input\_service\_registries) | service discovery | `map(string)` | `{}` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | n/a | `map(string)` | <pre>{<br>  "provision": "terraform"<br>}</pre> | no |
+| <a name="input_target_group_name"></a> [target\_group\_name](#input\_target\_group\_name) | n/a | `string` | `null` | no |
 | <a name="input_task_def"></a> [task\_def](#input\_task\_def) | n/a | `any` | n/a | yes |
 | <a name="input_task_exec_iam_role_arn"></a> [task\_exec\_iam\_role\_arn](#input\_task\_exec\_iam\_role\_arn) | Existing IAM role ARN | `string` | `null` | no |
 | <a name="input_tasks_iam_role_arn"></a> [tasks\_iam\_role\_arn](#input\_tasks\_iam\_role\_arn) | Existing IAM role ARN | `string` | `null` | no |

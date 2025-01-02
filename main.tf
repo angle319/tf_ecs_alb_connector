@@ -1,8 +1,9 @@
 locals {
-  name          = var.name
-  environment   = var.env
-  alias         = (var.alias == null) ? "${local.name}-${var.env}" : var.alias
-  desired_count = var.desired_count
+  name              = var.name
+  environment       = var.env
+  alias             = (var.alias == null) ? "${local.name}-${var.env}" : var.alias
+  target_group_name = (var.target_group_name == null) ? "${local.alias}-tg" : var.target_group_name
+  desired_count     = var.desired_count
   health_check = merge({
     path                = "/"
     healthy_threshold   = "5"
@@ -138,7 +139,7 @@ resource "aws_ecs_task_definition" "this" {
 
 resource "aws_alb_target_group" "this" {
   count                         = var.mapping_port == 0 ? 0 : 1
-  name                          = "${local.alias}-tg"
+  name                          = local.target_group_name
   port                          = 80
   protocol                      = "HTTP"
   vpc_id                        = var.vpc_id
